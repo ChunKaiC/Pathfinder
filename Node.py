@@ -12,7 +12,6 @@ class Node:
         self.h = h
         self.mutable = True
         self.hovering = False
-        self.is_wall = False
 
     def draw(self):
         pygame.draw.rect(self.window, self.colour, [self.x, self.y, self.w, self.h])
@@ -34,7 +33,7 @@ class Node:
                     self.colour = (255, 0, 0)
                     self.mutable = False
                 else:
-                    self.colour = (0, 0, 0)
+                    self.colour = (26, 26, 26)
                 return True
             else:
                 self.colour = (46, 46, 46)
