@@ -1,4 +1,5 @@
 
+# Interface
 class Command:
     def __init__(self, board, start_node, end_node):
         self.board = board
