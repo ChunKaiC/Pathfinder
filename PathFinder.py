@@ -45,18 +45,21 @@ class PathFinder:
                 if self.start is None and curr_node.mutable:
                     self.start = curr_node
                     curr_node.colour = (255, 0, 0)
+                    curr_node.mutable = False
 
             # Create end point
             if inputs[pygame.K_2]:
                 if self.end is None and curr_node.mutable:
                     self.end = curr_node
                     curr_node.colour = (0, 255, 0)
+                    curr_node.mutable = False
 
             # Create walls
             if inputs[pygame.K_3]:
                 if curr_node.mutable:
                     self.walls.append(curr_node)
                     curr_node.colour = (0, 0, 0)
+                    curr_node.mutable = False
 
             # Possible optimization: try only drawing coloured nodes, and display a base background
             for row in self.board:
