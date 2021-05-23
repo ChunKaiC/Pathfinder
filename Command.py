@@ -7,4 +7,4 @@ class Command:
         self.end_node = end_node
 
     def execute(self):
-        pass
+        NotImplementedError
