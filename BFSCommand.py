@@ -1,93 +1,87 @@
 import pygame
-import math
-from Node import Node
+import time
+from Vertex import Vertex
 
-pygame.init()
-window = pygame.display.set_mode((501, 501))
-pygame.display.set_caption("PathFinder")
-clock = pygame.time.Clock()
+START = (0, 255, 0)
+END = (255, 0, 0)
+EXPLORED = (0, 255, 255)
+UNEXPLORED = (46, 46, 46)
+PATH = (255, 255, 0)
+BLOCKADE = (0, 0, 0)
 
-program_state = True
-algo_state = True
-queue = []
+class BFSCommand:
+    def __init__(self, pathfinder, start_pos):
+        """Initialization"""
+        self.pathfinder = pathfinder
+        self.start_pos = start_pos
 
-# 5x5 matrix
-# Add a vertex to the dictionary
-def add_vertex(v):
-  global graph
-  global vertices_no
-  if v in graph:
-    print("Vertex ", v, " already exists.")
-  else:
-    vertices_no = vertices_no + 1
-    graph[v] = []
+    def light_up_path(self, pos):
+        """Light up the shortest path from start to end"""
+        # Starting vertex
+        current_vertex = self.pathfinder.vertex_list[pos[1]][pos[0]]
+        while current_vertex.colour != START:
+            if current_vertex.colour == EXPLORED:
+                current_vertex.colour = PATH
+            vertex_pred_pos = current_vertex.pred
+            current_vertex = self.pathfinder.vertex_list[vertex_pred_pos[1]][vertex_pred_pos[0]]
+    
+    def execute(self):
+        """Perfornm the algorithm"""
+         # Init program state
+        algo_state = True
+        clock = pygame.time.Clock()
 
-# Add an edge between vertex v1 and v2 with edge weight e
-def add_edge(v1, v2, e):
-  global graph
-  # Check if vertex v1 is a valid vertex
-  if v1 not in graph:
-    print("Vertex ", v1, " does not exist.")
-  # Check if vertex v2 is a valid vertex
-  elif v2 not in graph:
-    print("Vertex ", v2, " does not exist.")
-  else:
-    # Since this code is not restricted to a directed or 
-    # an undirected graph, an edge between v1 v2 does not
-    # imply that an edge exists between v2 and v1
-    temp = [v2, e]
-    graph[v1].append(temp)
+        # Init queue
+        Q = []
+        Q.append(self.start_pos)
 
-# Print the graph
-def print_graph():
-  global graph
-  for vertex in graph:
-    for edges in graph[vertex]:
-      print(vertex, " -> ", edges[0], " edge weight: ", edges[1])
+        # Init adjacency list
+        adjacency_list = {}
+        for row in self.pathfinder.vertex_list:
+            for vertex in row:
+                adjacency_list[vertex.pos] = []
+                # Up
+                if vertex.pos[1] - 1 >= 0:
+                    adjacency_list[vertex.pos].append((vertex.pos[0], vertex.pos[1] - 1))
+                # Down
+                if vertex.pos[1] + 1 <= self.pathfinder.res[1] // self.pathfinder.vertex_dimension - 1:
+                    adjacency_list[vertex.pos].append((vertex.pos[0], vertex.pos[1] + 1))
+                # Left
+                if vertex.pos[0] - 1 >= 0:
+                    adjacency_list[vertex.pos].append((vertex.pos[0] - 1, vertex.pos[1]))
+                # Right
+                if vertex.pos[0] + 1 <= self.pathfinder.res[0] // self.pathfinder.vertex_dimension - 1:
+                    adjacency_list[vertex.pos].append((vertex.pos[0] + 1, vertex.pos[1]))
 
-# driver code
-graph = {}
-# stores the number of vertices in the graph
-vertices_no = 0
-add_vertex(1)
-add_vertex(2)
-add_vertex(3)
-add_vertex(4)
-# Add the edges between the vertices by specifying
-# the from and to vertex along with the edge weights.
-add_edge(1, 2, 1)
-add_edge(1, 3, 1)
-add_edge(2, 3, 3)
-add_edge(3, 4, 4)
-add_edge(4, 1, 5)
-print_graph()
-# Reminder: the second element of each list inside the dictionary
-# denotes the edge weight.
-print ("Internal representation: ", graph)
+        while algo_state:
+            # Quit
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
 
-node_list = [[Node(window, (46, 46, 46), i, j, 100) for i in range(0, 501, 100)] for j in range(0, 501, 100)]
+            if len(Q) != 0:
+                current_vertex_pos = Q.pop(0)
+                current_vertex = self.pathfinder.vertex_list[current_vertex_pos[1]][current_vertex_pos[0]]
+                # If end is reached
+                if current_vertex.colour == END:
+                    algo_state = False
+                    self.light_up_path(current_vertex.pos)
+                else:
+                    for adjacent_vertex_pos in adjacency_list[current_vertex_pos]:
+                        adjacent_vertex = self.pathfinder.vertex_list[adjacent_vertex_pos[1]][adjacent_vertex_pos[0]]
+                        # If end is reached
+                        if adjacent_vertex.colour == END:
+                            adjacent_vertex.pred = current_vertex.pos
+                            algo_state = False
+                            self.light_up_path(adjacent_vertex.pos)
+                        elif adjacent_vertex.colour == UNEXPLORED:
+                            adjacent_vertex.pred = current_vertex.pos
+                            adjacent_vertex.colour = EXPLORED
+                            Q.append(adjacent_vertex_pos)
+            else: 
+                algo_state = False
 
-def draw_grid():
-    """Draws grid for the baord according to node_size"""
-    for i in range(0, 501 + 20, 100):
-        pygame.draw.line(window, (0, 0, 0), [i, 0], [i, 501])
-    for i in range(0, 501 + 20, 100):
-        pygame.draw.line(window, (0, 0, 0), [0, i], [501, i])
-
-while program_state:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            program_state = False
-
-    for row in node_list:
-        for curr_node in row:
-            curr_node.draw()
-
-    if algo_state:
-        pass
-
-    draw_grid()
-    pygame.display.update()
-    clock.tick(60)
-
-pygame.quit()
+            # Draw all vertices
+            self.pathfinder.draw_vertices()
+            pygame.display.update()
+            time.sleep(0.025)
