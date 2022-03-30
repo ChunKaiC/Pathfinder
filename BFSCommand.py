@@ -1,5 +1,6 @@
 import pygame
 import time
+from Command import Command
 from Vertex import Vertex
 
 START = (0, 255, 0)
@@ -9,7 +10,7 @@ UNEXPLORED = (46, 46, 46)
 PATH = (255, 255, 0)
 BLOCKADE = (0, 0, 0)
 
-class BFSCommand:
+class BFSCommand(Command):
     def __init__(self, pathfinder, start_pos):
         """Initialization"""
         self.pathfinder = pathfinder
